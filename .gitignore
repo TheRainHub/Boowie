@@ -9,10 +9,11 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# Native (Kotlin, keystore, provisioning)
 .kotlin/
 *.orig.*
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
@@ -21,17 +22,42 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# debug
+# Debug logs
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log
 
 # macOS
 .DS_Store
 *.pem
 
-# local env files
+# Local env files
 .env*.local
 
-# typescript
+# TypeScript
 *.tsbuildinfo
+
+# Gradle / Android build
+.gradle/
+build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.aab
+*.apk
+output-metadata.json
+
+# IntelliJ / Android Studio
+*.iml
+.idea/
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
+
+# Google Services (Firebase, etc.)
+google-services.json
+
+# Android profiling
+*.hprof
