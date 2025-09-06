@@ -24,7 +24,7 @@ export default [
     audio_url:
       'https://ia801501.us.archive.org/19/items/lostwarship_2504_librivox/lostwarship_01_williams_128kb.mp3',
     thumbnail_url:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Adventures_of_sherlock_holmes.jpg/330px-Adventures_of_sherlock_holmes.jpg',
+      'https://www.slovart.cz/buxus/images/image_24806_19_v1.jpeg',
   },
   {
     id: '4',
@@ -33,7 +33,7 @@ export default [
     audio_url:
       'https://ia601501.us.archive.org/19/items/lostwarship_2504_librivox/lostwarship_02_williams_128kb.mp3',
     thumbnail_url:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Christie%27s_auction_scan_of_Frankenstein_1818.jpg/330px-Christie%27s_auction_scan_of_Frankenstein_1818.jpg',
+      'https://cdn.knihcentrum.cz/10463810_frankenstein-9.jpg',
   },
   {
     id: '5',
@@ -42,16 +42,16 @@ export default [
     audio_url:
       'https://ia801501.us.archive.org/19/items/lostwarship_2504_librivox/lostwarship_03_williams_128kb.mp3',
     thumbnail_url:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Dracula_1st_ed_cover_reproduction.jpg/330px-Dracula_1st_ed_cover_reproduction.jpg',
+      'https://d28hgpri8am2if.cloudfront.net/book_images/onix/cvr9781476788104/dracula-9781476788104_hr.jpg',
   },
   {
     id: '6',
-    title: 'The Picture of Dorian Gray',
-    author: 'Oscar Wilde',
+    title: 'The Witcher',
+    author: 'Andrzej Sapkowski',
     audio_url:
       'https://ia801501.us.archive.org/19/items/lostwarship_2504_librivox/lostwarship_04_williams_128kb.mp3',
     thumbnail_url:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Lippincott_doriangray.jpg/330px-Lippincott_doriangray.jpg',
+      'https://i0.wp.com/thefantasyreviews.com/wp-content/uploads/2021/03/A-Review-of-The-Tower-of-Swallows.jpg?fit=312%2C475&ssl=1',
   },
   {
     id: '7',
@@ -67,14 +67,14 @@ export default [
     author: 'Oscar Wilde',
     audio_url:
       'https://ia801501.us.archive.org/19/items/lostwarship_2504_librivox/lostwarship_06_williams_128kb.mp3',
-    thumbnail_url: 'https://m.media-amazon.com/images/I/51IPJiX34fL.jpg',
+    thumbnail_url: 'https://d28hgpri8am2if.cloudfront.net/book_images/onix/cvr9781625587534/the-picture-of-dorian-gray-9781625587534_hr.jpg',
   },
   {
     id: '9',
-    title: 'The Picture of Dorian Gray',
-    author: 'Oscar Wilde',
+    title: "Harry Potter and Philosopher's Stone",
+    author: 'J.K. Rowling',
     audio_url:
       'https://ia801501.us.archive.org/19/items/lostwarship_2504_librivox/lostwarship_07_williams_128kb.mp3',
-    thumbnail_url: 'https://m.media-amazon.com/images/I/51IPJiX34fL.jpg',
+    thumbnail_url: 'https://static.posters.cz/image/1300/214926.jpg',
   },
 ];
