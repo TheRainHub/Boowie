@@ -1,19 +1,23 @@
-import { StatusBar } from 'expo-status-bar';
-import { View, FlatList } from 'react-native';
-
-import books from '../../dummyBooks';
-import BookListItem from '../../components/BookListItem';
+// app/(tabs)/index.tsx
+import { View, Text, StyleSheet } from 'react-native';
 
 export default function App() {
   return (
-    <View className='bg-slate-800 flex-1 justify-center p-4 pt-20'>
-      <FlatList
-        data={books}
-        contentContainerClassName='gap-5'
-        renderItem={({ item }) => <BookListItem book={item} />}
-      />
-      
-      <StatusBar style="auto" />
+    <View style={styles.container}>
+      <Text style={styles.text}>Dark Theme Working!</Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    color: 'white',
+    fontSize: 20,
+  },
+});
