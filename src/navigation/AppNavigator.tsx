@@ -5,6 +5,7 @@ import HomeScreen from '../screens/HomeScreen';
 import PlayerScreen from '../screens/PlayerScreen';
 import EditBookScreen from '../screens/EditBookScreen';
 import { Book } from '../constants/books';
+import { Colors } from '../constants/colors';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -20,7 +21,7 @@ const AppNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          cardStyle: { backgroundColor: '#0a0a0a' },
+          cardStyle: { backgroundColor: Colors.background.primary },
         }}
       >
         <Stack.Screen name="Home" component={HomeScreen} />

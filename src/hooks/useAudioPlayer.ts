@@ -1,16 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAudioPlayer, AudioSource } from 'expo-audio';
 import { BookStorage } from '../services/BookStorage';
+import { AppState } from 'react-native';
 
 export const useAudioPlayerHook = (audioUrl: string, bookId: string) => {
   const player = useAudioPlayer(audioUrl as AudioSource);
+  
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
+  const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number | null>(null);
+  
   const saveProgressInterval = useRef<NodeJS.Timeout | null>(null);
   const positionUpdateInterval = useRef<NodeJS.Timeout | null>(null);
+  const sleepTimerInterval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     return () => {
@@ -20,6 +26,9 @@ export const useAudioPlayerHook = (audioUrl: string, bookId: string) => {
       if (positionUpdateInterval.current) {
         clearInterval(positionUpdateInterval.current);
       }
+      if (sleepTimerInterval.current) {
+        clearInterval(sleepTimerInterval.current);
+      }
     };
   }, []);
 
@@ -27,6 +36,19 @@ export const useAudioPlayerHook = (audioUrl: string, bookId: string) => {
   useEffect(() => {
     setIsPlaying(player.playing);
   }, [player.playing]);
+
+  // Handle app state changes - продолжаем воспроизведение в фоне
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      console.log('App state changed to:', nextAppState);
+      // expo-audio автоматически обрабатывает фоновое воспроизведение
+      // если shouldPlayInBackground: true
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // Update position and duration continuously
   useEffect(() => {
@@ -39,7 +61,7 @@ export const useAudioPlayerHook = (audioUrl: string, bookId: string) => {
           setPosition(player.currentTime * 1000); // Convert to ms
         }
       } catch (error) {
-        // Ignore errors during status updates
+       // Ignore errors during status updates
       }
     };
 
@@ -52,6 +74,42 @@ export const useAudioPlayerHook = (audioUrl: string, bookId: string) => {
       }
     };
   }, [player]);
+
+  // Sleep Timer Logic
+  useEffect(() => {
+    if (sleepTimerMinutes !== null && sleepTimerRemaining === null) {
+      // Start timer
+      const endTime = Date.now() + sleepTimerMinutes * 60 * 1000;
+      setSleepTimerRemaining(sleepTimerMinutes * 60);
+
+      sleepTimerInterval.current = setInterval(() => {
+        const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+        setSleepTimerRemaining(remaining);
+
+        if (remaining <= 0) {
+          // Timer finished - pause playback
+          if (player.playing) {
+            player.pause();
+            setIsPlaying(false);
+            saveProgress(position, duration);
+          }
+          
+          // Clear timer
+          if (sleepTimerInterval.current) {
+            clearInterval(sleepTimerInterval.current);
+          }
+          setSleepTimerMinutes(null);
+          setSleepTimerRemaining(null);
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (sleepTimerInterval.current) {
+        clearInterval(sleepTimerInterval.current);
+      }
+    };
+  }, [sleepTimerMinutes]);
 
   const loadAudio = async () => {
     try {
@@ -167,6 +225,24 @@ export const useAudioPlayerHook = (audioUrl: string, bookId: string) => {
     }
   };
 
+  const setSleepTimer = (minutes: number | null) => {
+    // Cancel existing timer
+    if (sleepTimerInterval.current) {
+      clearInterval(sleepTimerInterval.current);
+    }
+    
+    setSleepTimerMinutes(minutes);
+    setSleepTimerRemaining(null);
+  };
+
+  const cancelSleepTimer = () => {
+    if (sleepTimerInterval.current) {
+      clearInterval(sleepTimerInterval.current);
+    }
+    setSleepTimerMinutes(null);
+    setSleepTimerRemaining(null);
+  };
+
   return {
     sound: player,
     isPlaying,
@@ -174,11 +250,15 @@ export const useAudioPlayerHook = (audioUrl: string, bookId: string) => {
     duration,
     isLoading,
     playbackSpeed,
+    sleepTimerMinutes,
+    sleepTimerRemaining,
     togglePlayPause,
     seekTo,
     skipForward,
     skipBackward,
     changePlaybackSpeed,
+    setSleepTimer,
+    cancelSleepTimer,
     loadAudio
   };
 };

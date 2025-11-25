@@ -1,19 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, Animated, Modal, ScrollView } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAudioPlayerHook } from '../hooks/useAudioPlayer';
 import { formatTime } from '../utils/formatTime';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Play, Pause, SkipBack, SkipForward, ChevronDown, Gauge } from 'lucide-react-native';
+import { Play, Pause, SkipBack, SkipForward, ChevronDown, Gauge, Timer, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
+import { Colors } from '../constants/colors';
 
 type PlayerScreenRouteProp = RouteProp<RootStackParamList, 'Player'>;
 
 const { width } = Dimensions.get('window');
 
 const PLAYBACK_SPEEDS = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+const SLEEP_TIMER_OPTIONS = [5, 10, 15, 30, 45, 60]; // minutes
 
 const PlayerScreen = () => {
   const navigation = useNavigation();
@@ -25,17 +27,22 @@ const PlayerScreen = () => {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekPosition, setSeekPosition] = useState(0);
+  const [showSleepTimerModal, setShowSleepTimerModal] = useState(false);
   
   const { 
     isPlaying, 
     position, 
     duration, 
     playbackSpeed,
+    sleepTimerMinutes,
+    sleepTimerRemaining,
     togglePlayPause, 
     skipForward, 
     skipBackward,
     seekTo,
     changePlaybackSpeed,
+    setSleepTimer,
+    cancelSleepTimer,
     loadAudio 
   } = useAudioPlayerHook(book.audioUrl, book.id);
 
@@ -76,22 +83,61 @@ const PlayerScreen = () => {
     changePlaybackSpeed(PLAYBACK_SPEEDS[nextIndex]);
   };
 
+  const formatSleepTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleSetSleepTimer = (minutes: number) => {
+    setSleepTimer(minutes);
+    setShowSleepTimerModal(false);
+  };
+
+  const handleToggleSleepTimer = () => {
+    if (sleepTimerMinutes) {
+      cancelSleepTimer();
+    } else {
+      setShowSleepTimerModal(true);
+    }
+  };
+
   return (
     <LinearGradient
-      colors={['#0a0a0a', '#1a1a1a', '#0a0a0a']}
+      colors={[Colors.background.primary, Colors.background.secondary, Colors.background.primary]}
       style={styles.container}
     >
       <Animated.View 
         style={[styles.header, { paddingTop: insets.top + 20, opacity: fadeAnim }]}
       >
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <ChevronDown color="#fff" size={28} />
+          <ChevronDown color={Colors.text.primary} size={28} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Now Playing</Text>
-        <TouchableOpacity onPress={cyclePlaybackSpeed} activeOpacity={0.7} style={styles.speedButton}>
-          <Gauge color="#fff" size={22} />
-          <Text style={styles.speedText}>{playbackSpeed}x</Text>
-        </TouchableOpacity>
+        
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Now Playing</Text>
+          {sleepTimerRemaining !== null && (
+            <View style={styles.timerBadge}>
+              <Timer size={12} color={Colors.nature.primary} />
+              <Text style={styles.timerBadgeText}>{formatSleepTimer(sleepTimerRemaining)}</Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.headerRight}>
+          <TouchableOpacity 
+            onPress={handleToggleSleepTimer} 
+            activeOpacity={0.7} 
+            style={[styles.iconButton, sleepTimerMinutes ? styles.iconButtonActive : null]}
+          >
+            <Timer color={sleepTimerMinutes ? Colors.nature.primary : Colors.text.primary} size={22} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity onPress={cyclePlaybackSpeed} activeOpacity={0.7} style={styles.speedButton}>
+            <Gauge color={Colors.text.primary} size={22} />
+            <Text style={styles.speedText}>{playbackSpeed}x</Text>
+          </TouchableOpacity>
+        </View>
       </Animated.View>
 
       <Animated.View 
@@ -106,7 +152,7 @@ const PlayerScreen = () => {
         <View style={styles.artworkContainer}>
           <Image source={{ uri: book.coverUrl }} style={styles.artwork} />
           <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.2)']}
+            colors={['transparent', 'rgba(0,0,0,0.4)']}
             style={styles.artworkGradient}
           />
           
@@ -133,9 +179,9 @@ const PlayerScreen = () => {
             value={currentPosition}
             onValueChange={handleSliderChange}
             onSlidingComplete={handleSlidingComplete}
-            minimumTrackTintColor="#ffffff"
-            maximumTrackTintColor="rgba(255,255,255,0.2)"
-            thumbTintColor="#ffffff"
+            minimumTrackTintColor={Colors.accent.primary}
+            maximumTrackTintColor="rgba(212,184,150,0.2)"
+            thumbTintColor={Colors.accent.primary}
           />
           
           <View style={styles.timeContainer}>
@@ -152,7 +198,7 @@ const PlayerScreen = () => {
             style={styles.controlButton}
             activeOpacity={0.7}
           >
-            <SkipBack color="#fff" size={32} />
+            <SkipBack color={Colors.text.primary} size={32} />
             <Text style={styles.skipText}>15s</Text>
           </TouchableOpacity>
 
@@ -162,9 +208,9 @@ const PlayerScreen = () => {
             activeOpacity={0.85}
           >
             {isPlaying ? (
-              <Pause color="#000" fill="#000" size={40} />
+              <Pause color={Colors.background.primary} fill={Colors.background.primary} size={40} />
             ) : (
-              <Play color="#000" fill="#000" size={40} style={{ marginLeft: 4 }} />
+              <Play color={Colors.background.primary} fill={Colors.background.primary} size={40} style={{ marginLeft: 4 }} />
             )}
           </TouchableOpacity>
 
@@ -173,7 +219,7 @@ const PlayerScreen = () => {
             style={styles.controlButton}
             activeOpacity={0.7}
           >
-            <SkipForward color="#fff" size={32} />
+            <SkipForward color={Colors.text.primary} size={32} />
             <Text style={styles.skipText}>15s</Text>
           </TouchableOpacity>
         </View>
@@ -192,6 +238,54 @@ const PlayerScreen = () => {
           </View>
         </View>
       </Animated.View>
+
+      {/* Sleep Timer Modal */}
+      <Modal
+        visible={showSleepTimerModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSleepTimerModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>⏰ Sleep Timer</Text>
+              <TouchableOpacity onPress={() => setShowSleepTimerModal(false)} activeOpacity={0.7}>
+                <X color={Colors.text.primary} size={24} />
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={styles.modalSubtitle}>Playback will stop after:</Text>
+            
+            <ScrollView style={styles.timerOptions} showsVerticalScrollIndicator={false}>
+              {SLEEP_TIMER_OPTIONS.map((minutes) => (
+                <TouchableOpacity
+                  key={minutes}
+                  style={styles.timerOption}
+                  activeOpacity={0.8}
+                  onPress={() => handleSetSleepTimer(minutes)}
+                >
+                  <LinearGradient
+                    colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']}
+                    style={styles.timerOptionGradient}
+                  >
+                    <Timer size={20} color={Colors.nature.primary} />
+                    <Text style={styles.timerOptionText}>{minutes} minutes</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            
+            <TouchableOpacity
+              style={styles.cancelButton}
+              activeOpacity={0.8}
+              onPress={() => setShowSleepTimerModal(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 };
@@ -208,24 +302,33 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   headerTitle: {
-    color: '#fff',
+    color: Colors.text.primary,
     fontSize: 15,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    opacity: 0.8,
+    opacity: 0.9,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   speedButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(212,184,150,0.15)', // Golden tint
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 16,
     gap: 4,
   },
   speedText: {
-    color: '#fff',
+    color: Colors.text.primary,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -237,7 +340,7 @@ const styles = StyleSheet.create({
   },
   artworkContainer: {
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: Colors.background.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.6,
     shadowRadius: 24,
@@ -249,6 +352,8 @@ const styles = StyleSheet.create({
     height: width - 80,
     borderRadius: 24,
     backgroundColor: '#222',
+    borderWidth: 1,
+    borderColor: 'rgba(212,184,150,0.1)', // Subtle gold border
   },
   artworkGradient: {
     position: 'absolute',
@@ -264,23 +369,25 @@ const styles = StyleSheet.create({
     left: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(26,31,26,0.8)', // Dark stone
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   indicatorDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#888',
+    backgroundColor: Colors.text.muted,
   },
   indicatorDotPlaying: {
-    backgroundColor: '#4ade80',
+    backgroundColor: Colors.nature.primary, // Olive green
   },
   indicatorText: {
-    color: '#fff',
+    color: Colors.text.primary,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -291,20 +398,23 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.text.primary,
     textAlign: 'center',
     marginBottom: 8,
     letterSpacing: -0.5,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   author: {
-    fontSize: 17,
-    color: '#999',
+    fontSize: 18,
+    color: Colors.text.secondary, // Gold
+    fontWeight: '500',
     textAlign: 'center',
-    letterSpacing: 0.3,
   },
   progressContainer: {
     width: '100%',
-    marginTop: 16,
+    marginTop: 20,
   },
   slider: {
     width: '100%',
@@ -313,51 +423,49 @@ const styles = StyleSheet.create({
   timeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 4,
     paddingHorizontal: 4,
   },
   timeText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    color: Colors.text.primary,
+    fontSize: 12,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
   },
   timeRemainingText: {
-    color: '#888',
-    fontSize: 14,
+    color: Colors.text.muted,
+    fontSize: 12,
     fontWeight: '600',
-    letterSpacing: 0.5,
+    fontVariant: ['tabular-nums'],
   },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 24,
-    paddingHorizontal: 16,
+    justifyContent: 'center',
+    gap: 32,
+    marginTop: 10,
   },
   controlButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 56,
-    height: 56,
+    width: 64,
+    height: 64,
   },
   skipText: {
-    color: '#fff',
-    fontSize: 11,
-    marginTop: 6,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+    color: Colors.text.muted,
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: 4,
   },
   playPauseButton: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: '#fff',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.accent.primary, // Gold
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#fff',
+    shadowColor: Colors.accent.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 10,
   },
@@ -368,18 +476,120 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   infoChip: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(212,184,150,0.08)', // Golden tint
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(212,184,150,0.15)',
   },
   infoChipText: {
-    color: '#aaa',
+    color: Colors.text.muted,
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.3,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconButtonActive: {
+    backgroundColor: 'rgba(107,142,35,0.2)', // Olive tint
+    borderWidth: 1,
+    borderColor: 'rgba(107,142,35,0.3)',
+  },
+  timerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(107,142,35,0.15)', // Olive tint
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 4,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(107,142,35,0.2)',
+  },
+  timerBadgeText: {
+    color: Colors.nature.primary,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: Colors.background.card, // Stone card
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(212,184,150,0.2)', // Gold border
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    color: Colors.text.primary,
+    fontSize: 22,
+    fontWeight: 'bold',
+    fontFamily: 'serif', // Optional: adds to fantasy feel
+  },
+  modalSubtitle: {
+    color: Colors.text.muted,
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  timerOptions: {
+    maxHeight: 300,
+  },
+  timerOption: {
+    marginBottom: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  timerOptionGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  timerOptionText: {
+    color: Colors.text.primary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelButton: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  cancelButtonText: {
+    color: Colors.text.primary,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

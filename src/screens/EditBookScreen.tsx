@@ -8,6 +8,7 @@ import { CoverGenerationService } from '../services/CoverGenerationService';
 import { X, Save, Sparkles, Image as ImageIcon } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AudioFileService } from '../services/AudioFileService';
+import { Colors } from '../constants/colors';
 
 type EditBookRouteProp = RouteProp<RootStackParamList, 'EditBook'>;
 
@@ -95,10 +96,13 @@ const EditBookScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient colors={['#0a0a0a', '#121212']} style={styles.gradientBackground}>
+      <LinearGradient 
+        colors={[Colors.background.primary, Colors.background.secondary]} 
+        style={styles.gradientBackground}
+      >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
-            <X color="#fff" size={24} />
+            <X color={Colors.text.primary} size={24} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Book</Text>
           <TouchableOpacity 
@@ -107,9 +111,9 @@ const EditBookScreen = () => {
             disabled={isSaving}
           >
             {isSaving ? (
-              <ActivityIndicator color="#000" size="small" />
+              <ActivityIndicator color={Colors.background.primary} size="small" />
             ) : (
-              <Save color="#000" size={20} />
+              <Save color={Colors.background.primary} size={20} />
             )}
           </TouchableOpacity>
         </View>
@@ -126,10 +130,10 @@ const EditBookScreen = () => {
                 disabled={isGenerating}
               >
                 {isGenerating ? (
-                  <ActivityIndicator color="#fff" size="small" />
+                  <ActivityIndicator color={Colors.text.primary} size="small" />
                 ) : (
                   <>
-                    <Sparkles color="#fff" size={20} />
+                    <Sparkles color={Colors.text.primary} size={20} />
                     <Text style={styles.coverActionText}>Generate AI Cover</Text>
                   </>
                 )}
@@ -139,7 +143,7 @@ const EditBookScreen = () => {
                 style={styles.coverActionButtonSecondary}
                 onPress={handlePickCover}
               >
-                <ImageIcon color="#fff" size={20} />
+                <ImageIcon color={Colors.text.primary} size={20} />
                 <Text style={styles.coverActionText}>Pick Image</Text>
               </TouchableOpacity>
             </View>
@@ -154,7 +158,7 @@ const EditBookScreen = () => {
                 value={title}
                 onChangeText={setTitle}
                 placeholder="Book title"
-                placeholderTextColor="#555"
+                placeholderTextColor={Colors.text.muted}
               />
             </View>
 
@@ -165,7 +169,7 @@ const EditBookScreen = () => {
                 value={author}
                 onChangeText={setAuthor}
                 placeholder="Author name"
-                placeholderTextColor="#555"
+                placeholderTextColor={Colors.text.muted}
               />
             </View>
 
@@ -176,7 +180,7 @@ const EditBookScreen = () => {
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Book description"
-                placeholderTextColor="#555"
+                placeholderTextColor={Colors.text.muted}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -192,7 +196,7 @@ const EditBookScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: Colors.background.primary,
   },
   gradientBackground: {
     flex: 1,
@@ -205,10 +209,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   headerTitle: {
-    color: '#fff',
+    color: Colors.text.primary,
     fontSize: 20,
     fontWeight: '700',
     letterSpacing: -0.5,
+    fontFamily: 'serif',
   },
   closeButton: {
     width: 40,
@@ -220,7 +225,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.accent.primary, // Gold
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -241,6 +246,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#222',
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(212,184,150,0.2)', // Gold border
   },
   coverActions: {
     flexDirection: 'row',
@@ -249,23 +256,27 @@ const styles = StyleSheet.create({
   coverActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(107,142,35,0.2)', // Olive tint
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
     gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(107,142,35,0.3)',
   },
   coverActionButtonSecondary: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
     gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   coverActionText: {
-    color: '#fff',
+    color: Colors.text.primary,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -277,20 +288,20 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    color: '#aaa',
+    color: Colors.text.secondary, // Gold
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: Colors.background.card,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(212,184,150,0.15)', // Gold border
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#fff',
+    color: Colors.text.primary,
     fontSize: 16,
   },
   textArea: {

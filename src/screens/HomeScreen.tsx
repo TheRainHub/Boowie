@@ -9,6 +9,7 @@ import { Play, Plus, Trash2, Edit3 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BookStorage, BookProgress } from '../services/BookStorage';
 import { AudioFileService } from '../services/AudioFileService';
+import { Colors } from '../constants/colors';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -51,76 +52,64 @@ const BookCard = ({
   const progressPercent = progress ? (progress.position / progress.duration) * 100 : 0;
 
   return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
-      <TouchableOpacity
-        style={styles.bookCard}
+    <Animated.View style={[styles.cardContainer, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+      <TouchableOpacity 
+        style={styles.card} 
         onPress={onPress}
         activeOpacity={0.9}
       >
-        <View style={styles.cardInner}>
-          <Image source={{ uri: item.coverUrl }} style={styles.cover} />
-          
-          {/* Format Badge */}
-          {item.audioUrl && (
-            <View style={styles.formatBadge}>
-              <Text style={styles.formatText}>
-                {item.audioUrl.split('.').pop()?.toUpperCase() || 'AUDIO'}
-              </Text>
-            </View>
-          )}
-          
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.9)']}
-            style={styles.gradient}
-          >
-            <View style={styles.bookInfo}>
-              <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
-              <Text style={styles.author} numberOfLines={1}>{item.author}</Text>
-              
-              {progress && progressPercent > 0 && (
-                <View style={styles.progressBarContainer}>
-                  <View style={styles.progressBarBg}>
-                    <View style={[styles.progressBar, { width: `${progressPercent}%` }]} />
-                  </View>
-                  <Text style={styles.progressText}>{Math.round(progressPercent)}%</Text>
-                </View>
-              )}
-              
-              <View style={styles.actionsRow}>
-                <View style={styles.playButton}>
-                  <Play size={14} color="#000" fill="#000" />
-                  <Text style={styles.playText}>
-                    {progress && progressPercent > 0 ? 'Continue' : 'Listen Now'}
-                  </Text>
-                </View>
-                
-                <View style={styles.iconActions}>
-                  <TouchableOpacity 
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      onEdit();
-                    }}
-                    style={styles.editButton}
-                    activeOpacity={0.7}
-                  >
-                    <Edit3 size={14} color="#fff" />
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity 
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      onDelete();
-                    }}
-                    style={styles.deleteButton}
-                    activeOpacity={0.7}
-                  >
-                    <Trash2 size={14} color="#ff4444" />
-                  </TouchableOpacity>
-                </View>
+        <Image source={{ uri: item.coverUrl }} style={styles.cardCover} />
+        <LinearGradient
+          colors={[Colors.background.card, 'rgba(42,47,37,0.95)']} // Stone/Nature gradient
+          style={styles.cardGradient}
+        >
+          <View style={styles.cardContent}>
+            <View style={styles.cardHeader}>
+              <View style={styles.formatBadge}>
+                <Text style={styles.formatText}>{item.format || 'MP3'}</Text>
+              </View>
+              <View style={styles.actionButtons}>
+                <TouchableOpacity 
+                  style={styles.editButton} 
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    onEdit();
+                  }}
+                >
+                  <Edit3 size={14} color={Colors.text.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.deleteButton} 
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                >
+                  <Trash2 size={14} color={Colors.error} />
+                </TouchableOpacity>
               </View>
             </View>
-          </LinearGradient>
-        </View>
+            
+            <View>
+              <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+              <Text style={styles.cardAuthor} numberOfLines={1}>{item.author}</Text>
+            </View>
+
+            <View style={styles.progressSection}>
+              <View style={styles.progressBarBg}>
+                <View style={[styles.progressBar, { width: `${progressPercent}%` }]} />
+              </View>
+              <Text style={styles.progressText}>{Math.round(progressPercent)}% Played</Text>
+            </View>
+
+            <View style={styles.playButton}>
+              <Play size={14} color={Colors.background.primary} fill={Colors.background.primary} />
+              <Text style={styles.playText}>
+                {progress && progressPercent > 0 ? 'Continue' : 'Listen Now'}
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -247,9 +236,9 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.background.primary} />
       <LinearGradient
-        colors={['#0a0a0a', '#121212']}
+        colors={[Colors.background.primary, Colors.background.secondary, Colors.background.primary]}
         style={styles.gradientBackground}
       >
         <View style={styles.header}>
@@ -266,16 +255,16 @@ const HomeScreen = () => {
             disabled={isAdding}
           >
             {isAdding ? (
-              <ActivityIndicator color="#000" size="small" />
+              <ActivityIndicator color={Colors.background.primary} size="small" />
             ) : (
-              <Plus size={24} color="#000" strokeWidth={3} />
+              <Plus size={24} color={Colors.background.primary} strokeWidth={3} />
             )}
           </TouchableOpacity>
         </View>
         
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator color="#fff" size="large" />
+            <ActivityIndicator color={Colors.accent.primary} size="large" />
             <Text style={styles.loadingText}>Loading library...</Text>
           </View>
         ) : (
@@ -301,202 +290,188 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: Colors.background.primary,
   },
   gradientBackground: {
     flex: 1,
   },
   header: {
-    padding: 24,
-    paddingTop: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   headerTitle: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.text.primary,
     letterSpacing: -0.5,
+    fontFamily: 'serif', // Optional: adds to fantasy feel
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#888',
+    color: Colors.text.muted,
     marginTop: 4,
-    letterSpacing: 0.5,
+    fontWeight: '500',
   },
   addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: Colors.nature.primary, // Olive green
     justifyContent: 'center',
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 2 },
+    alignItems: 'center',
+    shadowColor: Colors.nature.primary,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    color: '#888',
-    marginTop: 16,
-    fontSize: 16,
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 100,
-  },
-  emptyText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  emptySubtext: {
-    color: '#888',
-    fontSize: 14,
-    marginTop: 8,
-  },
   listContent: {
-    padding: 16,
-    paddingTop: 0,
+    padding: 24,
+    paddingTop: 10,
   },
-  bookCard: {
-    marginBottom: 20,
+  cardContainer: {
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  card: {
+    height: 180,
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: '#1a1a1a',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
+    backgroundColor: Colors.background.card,
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: 'rgba(212,184,150,0.1)', // Subtle gold border
   },
-  cardInner: {
-    position: 'relative',
-    height: 280,
-  },
-  cover: {
-    width: '100%',
+  cardCover: {
+    width: 120,
     height: '100%',
     resizeMode: 'cover',
   },
+  cardGradient: {
+    flex: 1,
+  },
+  cardContent: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'space-between',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
   formatBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    paddingHorizontal: 10,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   formatText: {
-    color: '#fff',
+    color: Colors.text.muted,
     fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 0.5,
   },
-  gradient: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '60%',
-    justifyContent: 'flex-end',
-  },
-  bookInfo: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 6,
-    letterSpacing: -0.3,
-  },
-  author: {
-    fontSize: 15,
-    color: '#bbb',
-    marginBottom: 12,
-    letterSpacing: 0.2,
-  },
-  progressBarContainer: {
+  actionButtons: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    gap: 8,
+  },
+  editButton: {
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  deleteButton: {
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(201,122,113,0.15)', // Error tint
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.text.primary,
+    marginBottom: 4,
+    lineHeight: 24,
+  },
+  cardAuthor: {
+    fontSize: 14,
+    color: Colors.text.secondary, // Gold
+    fontWeight: '500',
+  },
+  progressSection: {
+    marginTop: 12,
   },
   progressBarBg: {
-    flex: 1,
     height: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 2,
-    overflow: 'hidden',
+    marginBottom: 6,
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.nature.primary, // Olive green
     borderRadius: 2,
   },
   progressText: {
-    color: '#fff',
     fontSize: 11,
+    color: Colors.text.muted,
     fontWeight: '600',
-    marginLeft: 8,
-    minWidth: 35,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   playButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.accent.primary, // Gold
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 24,
-    shadowColor: '#fff',
+    borderRadius: 20,
+    gap: 6,
+    shadowColor: Colors.accent.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
   },
   playText: {
-    color: '#000',
+    color: Colors.background.primary, // Dark text on gold
+    fontSize: 12,
     fontWeight: '700',
-    fontSize: 13,
-    marginLeft: 6,
-    letterSpacing: 0.3,
   },
-  iconActions: {
-    flexDirection: 'row',
-    gap: 8,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  editButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+  loadingText: {
+    color: Colors.text.muted,
+    marginTop: 12,
+    fontSize: 16,
+  },
+  emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 100,
   },
-  deleteButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,68,68,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  emptyText: {
+    color: Colors.text.primary,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    color: Colors.text.muted,
+    fontSize: 16,
   },
 });
 
