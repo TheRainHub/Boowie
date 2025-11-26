@@ -2,6 +2,7 @@
 
 Boowie is a modern, feature-rich audiobook player built with **React Native** and **Expo**. It combines a premium **"Fantasy Nature"** aesthetic (stone, gold, ivy) with powerful playback controls and AI-enhanced library management.
 
+bd55d4e5-ea10-47c0-bfa9-2e9fa624a882.png
 ## ✨ Key Features
 
 ### 🎧 Advanced Playback
