@@ -19,6 +19,7 @@
     "expo-audio": "~1.0.15",
     "expo-av": "^16.0.7",
     "expo-background-fetch": "~14.0.8",
+    "expo-blur": "~15.0.7",
     "expo-document-picker": "~14.0.7",
     "expo-file-system": "~19.0.19",
     "expo-image-manipulator": "^14.0.7",
