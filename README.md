@@ -1,148 +1,96 @@
 # 🎧 Boowie - Premium Audiobook Player
 
-Современное React Native приложение для прослушивания аудиокниг с AI-генерацией обложек и расширенными функциями управления воспроизведением.
+Boowie is a modern, feature-rich audiobook player built with **React Native** and **Expo**. It combines a premium **"Fantasy Nature"** aesthetic (stone, gold, ivy) with powerful playback controls and AI-enhanced library management.
 
-## ✨ Основные возможности
+## ✨ Key Features
 
-### 📚 Библиотека аудиокниг
-- Импорт локальных аудиофайлов (MP3, AWB, M4A, AAC, WAV, OGG)
-- Автоматическая генерация обложек на основе названия
-- Сохранение прогресса прослушивания
-- Индикация процента прослушанного материала
-- Редактирование метаданных книг
+### 🎧 Advanced Playback
+- **Format Support**: Plays MP3, AWB, M4A, AAC, WAV, OGG.
+- **Sleep Timer**: Fall asleep to your favorite stories with a customizable timer (5, 10, 15, 30, 45, 60 mins).
+- **Variable Speed**: Adjust playback speed from 0.5x to 2.0x.
+- **Background Playback**: Continue listening while using other apps or when the screen is off.
+- **Smart Progress**: Automatically saves your position for every book.
+- **Interactive Controls**: Smooth slider for seeking, skip forward/backward buttons.
 
-### 🎨 AI-генерация обложек
-- Умный подбор обложек через Unsplash
-- Опциональная интеграция с Gemini AI
-- Возможность выбора собственной обложки
-- Коллекция из 10 профессиональных фотографий книг
+### 📚 Library Management
+- **Easy Import**: Import audiobooks directly from your device's file system.
+- **Metadata Editing**: Edit book titles, authors, and descriptions.
+- **Format Detection**: Automatically detects and displays file formats (MP3, AWB, etc.).
+- **Progress Tracking**: Visual progress bars for each book in your library.
 
-### 🎵 Продвинутый плеер
-- **Интерактивный слайдер** для перемотки
-- **Регулировка скорости** воспроизведения (0.5x - 2.0x)
-- Пропуск вперед/назад на 15 секунд
-- Индикация состояния воспроизведения (Playing/Paused)
-- Отображение оставшегося времени
-- Сохранение позиции воспроизведения каждые 10 секунд
+### 🎨 AI & Design
+- **Fantasy Nature Theme**: A unique visual style inspired by ancient stone, warm gold, and organic greens.
+- **Smart Covers**: Automatically generates cover art based on book titles using keyword analysis (powered by Unsplash).
+- **Gemini AI Integration**: Optional advanced cover generation using Google's Gemini API.
+- **Premium UI**: Smooth animations, gradients, and glassmorphism effects using `expo-linear-gradient` and `react-native-reanimated`.
 
-### 💾 Управление библиотекой
-- Добавление книг одним нажатием
-- Редактирование названия, автора, описания
-- Удаление с подтверждением
-- Отображение формата файла (MP3, AWB и др.)
-- Счетчик аудиокниг в заголовке
+## 🛠 Tech Stack
 
-## 🛠 Технологии
+- **React Native** - Cross-platform development
+- **Expo SDK 54** - Modern development workflow
+- **TypeScript** - Type-safe code
+- **expo-audio** - Next-gen audio API
+- **expo-file-system** - Local file management
+- **AsyncStorage** - Data persistence
+- **Lucide React Native** - Beautiful vector icons
+- **@google/generative-ai** - AI integration
 
-- **React Native** - кроссплатформенная разработка
-- **Expo SDK 54** - современная инфраструктура
-- **TypeScript** - типобезопасный код
-- **expo-audio** - новый API для аудио (вместо устаревшего expo-av)
-- **expo-file-system** - работа с локальными файлами
-- **AsyncStorage** - хранение данных
-- **Lucide React Native** - красивые иконки
-- **Expo Linear Gradient** - градиенты для премиум дизайна
-- **@react-native-community/slider** - нативный слайдер
-- **@google/generative-ai** - опциональная AI генерация
+## 📦 Installation
 
-## 📦 Установка
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/boowie.git
+   cd boowie
+   ```
 
-```bash
-# Клонировать репозиторий
-git clone <your-repo-url>
-cd Boowie
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-# Установить зависимости
-npm install
+3. **Start the app**
+   ```bash
+   npx expo start
+   ```
 
-# Запустить приложение
-npx expo start
-```
+## 🎯 Usage
 
-## 🎯 Использование
+### Adding an Audiobook
+1. Tap the `+` button on the Home screen.
+2. Select an audio file from your device.
+3. The app will automatically generate a cover and add the book to your library.
 
-### Добавление аудиокниги
-1. Нажмите кнопку `+` на главном экране
-2. Выберите аудиофайл с вашего устройства
-3. Обложка сгенерируется автоматически
-4. Книга появится в библиотеке
+### Using the Sleep Timer
+1. Open the player for any book.
+2. Tap the **Timer** icon in the header.
+3. Select a duration (e.g., 15 minutes).
+4. The timer will count down and stop playback automatically.
 
-### Редактирование книги
-1. Нажмите иконку карандаша на карточке книги
-2. Измените название, автора или описание
-3. Нажмите "Generate AI Cover" для новой обложки
-4. Или "Pick Image" для выбора своей картинки
-5. Сохраните изменения
+### AI Cover Generation (Optional)
+To enable advanced AI cover generation with Gemini:
+1. Get an API key from [Google AI Studio](https://makersuite.google.com/app/apikey).
+2. Open `src/services/CoverGenerationService.ts`.
+3. Replace `YOUR_GEMINI_API_KEY_HERE` with your key.
 
-### Прослушивание
-1. Нажмите на карточку книги или "Listen Now"/"Continue"
-2. Используйте слайдер для перемотки
-3. Регулируйте скорость кнопкой со спидометром
-4. Прогресс сохраняется автоматически
-
-## 🔧 Настройка AI-генерации
-
-Для включения улучшенной генерации обложек через Gemini:
-
-1. Получите API ключ: https://makersuite.google.com/app/apikey
-2. Откройте `src/services/CoverGenerationService.ts`
-3. Замените `YOUR_GEMINI_API_KEY_HERE` на ваш ключ
-
-**Примечание**: Приложение работает и без AI - используется поиск по ключевым словам.
-
-## 📁 Структура проекта
+## 📁 Project Structure
 
 ```
 Boowie/
 ├── src/
-│   ├── constants/
-│   │   └── books.ts              # Типы и моковые данные
-│   ├── hooks/
-│   │   └── useAudioPlayer.ts     # Хук для управления плеером
-│   ├── navigation/
-│   │   └── AppNavigator.tsx      # Навигация приложения
-│   ├── screens/
-│   │   ├── HomeScreen.tsx        # Главный экран с библи отекой
-│   │   ├── PlayerScreen.tsx      # Экран плеера
-│   │   └── EditBookScreen.tsx    # Экран редактирования
-│   ├── services/
-│   │   ├── AudioFileService.ts   # Работа с аудиофайлами
-│   │   ├── BookStorage.ts        # Хранилище книг
-│   │   └── CoverGenerationService.ts # Генерация обложек
-│   └── utils/
-│       └── formatTime.ts         # Форматирование времени
-├── App.tsx                        # Корневой компонент
-└── index.ts                       # Точка входа
+│   ├── constants/        # Theme colors, mock data
+│   ├── hooks/            # Custom hooks (useAudioPlayer)
+│   ├── navigation/       # Stack navigator configuration
+│   ├── screens/          # Home, Player, EditBook screens
+│   ├── services/         # Audio, Storage, AI services
+│   └── utils/            # Helper functions
+├── App.tsx               # Root component
+└── app.json              # Expo configuration
 ```
 
-## 🎨 Дизайн
+## 📝 License
 
-Приложение использует современный кинематографический стиль:
-- Темная тема с градиентами
-- Плавные анимации
-- Glassmorphism эффекты
-- Премиальные тени и блики
-- Адаптивная верстка
-
-## 🚀 Будущие улучшения
-
-- [ ] Разбиение на главы
-- [ ] Закладки
-- [ ] Плейлисты
-- [ ] Синхронизация с облаком
-- [ ] Таймер сна
-- [ ] Эквалайзер
-- [ ] Интеграция с Audible/LibriVox
-- [ ] Социальные функции (рецензии, рекомендации)
-
-## 📝 Лицензия
-
-MIT License - используйте свободно!
-
-## 👨‍💻 Автор
-
-Создано with ❤️ using React Native & Expo
+MIT License - feel free to use and modify!
 
 ---
 
-**Happy Reading! 📖🎧**
+**Happy Listening! 📖🎧**
