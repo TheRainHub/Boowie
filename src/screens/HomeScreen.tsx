@@ -8,7 +8,9 @@ import { MOCK_BOOKS, Book } from '../constants/books';
 import { Play, Plus, Trash2, Edit3 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BookStorage, BookProgress } from '../services/BookStorage';
+import { AudiobookService } from '../services/AudiobookService';
 import { AudioFileService } from '../services/AudioFileService';
+import { ConversionService } from '../services/ConversionService';
 import { Colors } from '../constants/colors';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
@@ -50,6 +52,7 @@ const BookCard = ({
   }, []);
 
   const progressPercent = progress ? (progress.position / progress.duration) * 100 : 0;
+  const chapterCount = item.chapters ? item.chapters.length : 1;
 
   return (
     <Animated.View style={[styles.cardContainer, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
@@ -58,7 +61,7 @@ const BookCard = ({
         onPress={onPress}
         activeOpacity={0.9}
       >
-        <Image source={{ uri: item.coverUrl }} style={styles.cardCover} />
+        <Image source={{ uri: item.coverUrl || 'https://via.placeholder.com/150' }} style={styles.cardCover} />
         <LinearGradient
           colors={[Colors.background.card, 'rgba(42,47,37,0.95)']} // Stone/Nature gradient
           style={styles.cardGradient}
@@ -66,7 +69,7 @@ const BookCard = ({
           <View style={styles.cardContent}>
             <View style={styles.cardHeader}>
               <View style={styles.formatBadge}>
-                <Text style={styles.formatText}>{item.format || 'MP3'}</Text>
+                <Text style={styles.formatText}>{chapterCount > 1 ? `${chapterCount} Ch` : 'Single'}</Text>
               </View>
               <View style={styles.actionButtons}>
                 <TouchableOpacity 
@@ -147,41 +150,79 @@ const HomeScreen = () => {
     }, [])
   );
 
+  const [isConverting, setIsConverting] = useState(false);
+  const [conversionProgress, setConversionProgress] = useState({ current: 0, total: 0, filename: '' });
+
   const handleAddBook = async () => {
     try {
       setIsAdding(true);
-      const result = await AudioFileService.pickAudioFile();
+      const newBook = await AudiobookService.pickAudiobook();
       
-      if (result.canceled) {
+      if (!newBook) {
         setIsAdding(false);
         return;
       }
 
-      const file = result.assets[0];
-      const newBook = await AudioFileService.createBookFromFile(file);
+      // Check for AWB files
+      const hasAwbFiles = newBook.chapters.some(ch => ch.filename.toLowerCase().endsWith('.awb'));
       
-      await BookStorage.addBook(newBook);
-      await loadLibrary();
-      
-      const fileExt = file.name.split('.').pop()?.toUpperCase() || '';
-      const hasCover = newBook.coverUrl.startsWith('file://');
-      
-      Alert.alert(
-        '✅ Success', 
-        `"${newBook.title}"\n\nFormat: ${fileExt}\n${hasCover ? '🎨 AI Cover Generated!' : 'Cover: Default'}\n\nAdded to your library!`
-      );
+      if (hasAwbFiles) {
+        setIsAdding(false); // Stop adding spinner, start conversion UI
+        setIsConverting(true);
+        
+        try {
+          const convertedChapters = await ConversionService.convertChapters(
+            newBook.chapters,
+            (current, total, filename) => {
+              setConversionProgress({ current, total, filename });
+            }
+          );
+          
+          newBook.chapters = convertedChapters;
+          // Update audioUrl if it was pointing to an AWB file
+          if (newBook.audioUrl && newBook.audioUrl.toLowerCase().endsWith('.awb')) {
+             newBook.audioUrl = convertedChapters[0].uri;
+          }
+          
+          await BookStorage.addBook(newBook);
+          await loadLibrary();
+          
+          Alert.alert(
+            '✅ Success', 
+            `"${newBook.title}"\n\nConverted and added ${newBook.chapters.length} chapters!`
+          );
+        } catch (error) {
+          console.error('Conversion error:', error);
+          Alert.alert('Conversion Failed', 'Could not convert AWB files. The book was not added.');
+        } finally {
+          setIsConverting(false);
+        }
+      } else {
+        // No conversion needed
+        await BookStorage.addBook(newBook); // Ensure we save it (AudiobookService doesn't save anymore? Check this)
+        // Actually AudiobookService DOES save it. But if we convert, we need to update it.
+        // Wait, AudiobookService.pickAudiobook() calls BookStorage.addBook() internally.
+        // If we convert, we need to UPDATE the book.
+        // Let's modify logic:
+        // 1. If AWB, we should probably NOT save it in AudiobookService, or we update it here.
+        // Since AudiobookService saves it, we can just update it.
+        
+        if (hasAwbFiles) {
+             await BookStorage.updateBook(newBook.id, newBook);
+        }
+        
+        await loadLibrary();
+        
+        if (!hasAwbFiles) {
+            Alert.alert(
+                '✅ Success', 
+                `"${newBook.title}"\n\nChapters: ${newBook.chapters.length}\n\nAdded to your library!`
+            );
+        }
+      }
     } catch (error: any) {
       console.error('Error adding book:', error);
-      
-      // Show specific error message if it's a format issue
-      if (error.message && error.message.includes('Unsupported file format')) {
-        Alert.alert(
-          '❌ Unsupported Format',
-          `${error.message}\n\nSupported formats:\n• MP3\n• AWB (Adaptive Multi-Rate Wideband)\n• M4A\n• AAC\n• WAV\n• OGG`
-        );
-      } else {
-        Alert.alert('Error', 'Failed to add audiobook. Please try again.');
-      }
+      Alert.alert('Error', 'Failed to add audiobook. Please try again.');
     } finally {
       setIsAdding(false);
     }
@@ -202,10 +243,11 @@ const HomeScreen = () => {
               if (!MOCK_BOOKS.find(b => b.id === book.id)) {
                 await BookStorage.removeBook(book.id);
                 
-                // Delete audio file if it's local
-                if (book.audioUrl.startsWith('file://')) {
+                // Delete audio file if it's local and single file (legacy)
+                if (book.audioUrl && book.audioUrl.startsWith('file://')) {
                   await AudioFileService.deleteAudioFile(book.audioUrl);
                 }
+                // TODO: Delete chapter files if needed
               }
               
               await loadLibrary();
@@ -283,6 +325,28 @@ const HomeScreen = () => {
           />
         )}
       </LinearGradient>
+      {isConverting && (
+        <View style={styles.conversionOverlay}>
+          <View style={styles.conversionModal}>
+            <ActivityIndicator size="large" color={Colors.accent.primary} />
+            <Text style={styles.conversionTitle}>Converting Audiobook</Text>
+            <Text style={styles.conversionSubtitle}>
+              Chapter {conversionProgress.current} of {conversionProgress.total}
+            </Text>
+            <Text style={styles.conversionFilename} numberOfLines={1}>
+              {conversionProgress.filename}
+            </Text>
+            <View style={styles.conversionProgressBarBg}>
+              <View 
+                style={[
+                  styles.conversionProgressBar, 
+                  { width: `${(conversionProgress.current / conversionProgress.total) * 100}%` }
+                ]} 
+              />
+            </View>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -411,7 +475,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   progressBarBg: {
-    height: 4,
+    height: 5,
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 2,
     marginBottom: 6,
@@ -428,7 +492,7 @@ const styles = StyleSheet.create({
   },
   playButton: {
     position: 'absolute',
-    bottom: 16,
+    bottom: 50,
     right: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -472,6 +536,54 @@ const styles = StyleSheet.create({
   emptySubtext: {
     color: Colors.text.muted,
     fontSize: 16,
+  },
+  conversionOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  conversionModal: {
+    backgroundColor: Colors.background.card,
+    padding: 24,
+    borderRadius: 16,
+    width: '80%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(212,184,150,0.2)',
+  },
+  conversionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.text.primary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  conversionSubtitle: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+    marginBottom: 4,
+  },
+  conversionFilename: {
+    fontSize: 12,
+    color: Colors.text.muted,
+    marginBottom: 16,
+  },
+  conversionProgressBarBg: {
+    width: '100%',
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  conversionProgressBar: {
+    height: '100%',
+    backgroundColor: Colors.nature.primary,
   },
 });
 

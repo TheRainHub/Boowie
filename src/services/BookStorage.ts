@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Book } from '../constants/books';
+import { Book } from '../types';
 
 const BOOKS_KEY = '@audiobooks_library';
 const PROGRESS_KEY = '@audiobooks_progress';

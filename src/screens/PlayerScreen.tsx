@@ -34,6 +34,14 @@ const PlayerScreen = () => {
   const [showSleepTimerModal, setShowSleepTimerModal] = useState(false);
   const [showSpeedPanel, setShowSpeedPanel] = useState(false);
   
+  // Ensure we have chapters. If legacy book, create a dummy chapter.
+  const chapters = book.chapters || (book.audioUrl ? [{
+    id: 'legacy-chapter',
+    title: book.title,
+    uri: book.audioUrl,
+    filename: 'audio.mp3'
+  }] : []);
+
   const { 
     isPlaying, 
     position, 
@@ -41,6 +49,8 @@ const PlayerScreen = () => {
     playbackSpeed,
     sleepTimerMinutes,
     sleepTimerRemaining,
+    currentChapterIndex,
+    currentChapter,
     togglePlayPause, 
     skipForward, 
     skipBackward,
@@ -48,8 +58,10 @@ const PlayerScreen = () => {
     changePlaybackSpeed,
     setSleepTimer,
     cancelSleepTimer,
-    loadAudio 
-  } = useAudioPlayerHook(book.audioUrl, book.id);
+    loadAudio,
+    nextChapter,
+    previousChapter
+  } = useAudioPlayerHook(chapters, book.id);
 
   useEffect(() => {
     loadAudio();
@@ -243,7 +255,7 @@ const PlayerScreen = () => {
             ]}
           >
             <View style={styles.liquidGlassFrame}>
-              <Image source={{ uri: book.coverUrl }} style={styles.artwork} />
+              <Image source={{ uri: book.coverUrl || 'https://via.placeholder.com/300' }} style={styles.artwork} />
               <LinearGradient
                 colors={['transparent', 'rgba(0,0,0,0.3)']}
                 style={styles.artworkGradient}
@@ -264,6 +276,11 @@ const PlayerScreen = () => {
         <View style={styles.infoContainer}>
           <Text style={styles.title} numberOfLines={2}>{book.title}</Text>
           <Text style={styles.author}>{book.author}</Text>
+          {currentChapter && chapters.length > 1 && (
+            <Text style={styles.chapterTitle} numberOfLines={1}>
+              {currentChapter.title}
+            </Text>
+          )}
         </View>
 
         <View style={styles.progressContainer}>
@@ -297,7 +314,6 @@ const PlayerScreen = () => {
           </View>
         </View>
 
-        {/* Кнопки управления в новом стиле */}
         <View style={styles.controls}>
           {/* -10s button */}
           <TouchableOpacity 
@@ -312,7 +328,7 @@ const PlayerScreen = () => {
 
           {/* Previous track button */}
           <TouchableOpacity 
-            onPress={() => {/* TODO: Previous chapter */}} 
+            onPress={previousChapter} 
             style={styles.controlButtonSecondary}
             activeOpacity={0.7}
           >
@@ -338,7 +354,7 @@ const PlayerScreen = () => {
 
           {/* Next track button */}
           <TouchableOpacity 
-            onPress={() => {/* TODO: Next chapter */}} 
+            onPress={nextChapter} 
             style={styles.controlButtonSecondary}
             activeOpacity={0.7}
           >
@@ -359,7 +375,6 @@ const PlayerScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Раскрывающаяся панель скорости - расположена слева */}
         <View style={styles.speedContainer}>
           <Animated.View style={[styles.speedPanel, { width: panelWidthInterpolated }]}>
             <ScrollView 
@@ -525,7 +540,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  
   liquidGlassButton: {
     width: 44,
     height: 44,
@@ -549,7 +563,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(212,184,150,0.03)',
   },
-  
   timerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -567,14 +580,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
-  
   content: {
     flex: 1,
     paddingHorizontal: 24,
     justifyContent: 'space-between',
     paddingBottom: 20,
   },
-  
   artworkContainer: {
     alignItems: 'center',
     marginTop: 10,
@@ -610,7 +621,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: 28,
   },
-  
   playbackIndicator: {
     position: 'absolute',
     top: 20,
@@ -650,7 +660,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
   },
-  
   infoContainer: {
     alignItems: 'center',
     marginTop: 20,
@@ -673,7 +682,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.5,
   },
-  
+  chapterTitle: {
+    color: Colors.text.muted,
+    fontSize: 14,
+    marginTop: 4,
+    fontWeight: '500',
+  },
   progressContainer: {
     width: '100%',
     marginTop: 16,
@@ -727,8 +741,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
-  
-  // Новые кнопки управления
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -759,7 +771,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
-  
   playPauseContainerNew: {
     width: 72,
     height: 72,
@@ -782,8 +793,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
   },
-  
-  // Панель скорости - слева
   speedContainer: {
     marginTop: 12,
     alignItems: 'flex-start',
@@ -861,7 +870,6 @@ const styles = StyleSheet.create({
   speedOptionTextActive: {
     color: Colors.accent.primary,
   },
-  
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.9)',

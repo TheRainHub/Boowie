@@ -114,6 +114,15 @@ export const AudioFileService = {
         audioUrl: audioUri,
         duration: 0, // Will be updated when audio is loaded
         description: `${fileExtension.toUpperCase()} audiobook added from ${file.name}`,
+        chapters: [
+          {
+            id: `${bookId}_1`,
+            title: title,
+            uri: audioUri,
+            filename: fileName,
+            duration: 0
+          }
+        ]
       };
 
       return book;
